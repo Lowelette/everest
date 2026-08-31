@@ -298,3 +298,34 @@
 
 /* V5.5 — sticky включается только для длинного каталога */
 @media (min-width:861px){.catalog-filter-shell.is-sticky{position:sticky;top:104px}}
+
+
+/* ===== V5.6: фильтры как полноценная колонка на всю высоту каталога ===== */
+@media (min-width:861px){
+  .catalog-browser{align-items:stretch}
+  .catalog-filter-shell{
+    height:auto;min-height:100%;padding:0;overflow:visible;display:block;
+    align-self:stretch;background:color-mix(in srgb,var(--card) 96%,var(--bg-2));
+  }
+  .catalog-filter-inner{
+    box-sizing:border-box;width:100%;padding:20px 18px 24px;
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .catalog-filter-body{
+    flex:0 0 auto;overflow:visible;max-height:none;margin:0;padding:0;
+    scrollbar-width:thin;
+  }
+  .catalog-filter-shell.is-sticky{position:static;top:auto}
+  .catalog-filter-shell.is-sticky .catalog-filter-inner{
+    position:sticky;top:104px;max-height:calc(100vh - 124px);overflow:hidden;
+  }
+  .catalog-filter-shell.is-sticky .catalog-filter-body{
+    flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    margin:0 -8px 0 0;padding:0 9px 22px 0;
+  }
+}
+@media (max-width:860px){
+  .catalog-filter-shell{padding:0}
+  .catalog-filter-inner{padding:14px 16px}
+  .catalog-filter-body{overflow:visible;margin:0;padding:0}
+}

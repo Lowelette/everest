@@ -69,12 +69,14 @@
       sections.push(`<section class="catalog-filter-section"><h3>Цена</h3><div class="catalog-price-filter"><label><span>от</span><input inputmode="numeric" autocomplete="off" placeholder="${meta.price_min ? 'от '+formatNumber(meta.price_min) : 'от'}" data-price-min></label><span class="catalog-price-dash">—</span><label><span>до</span><input inputmode="numeric" autocomplete="off" placeholder="${meta.price_max ? 'до '+formatNumber(meta.price_max) : 'до'}" data-price-max></label></div></section>`);
     }
     return `<aside class="catalog-filter-shell" data-catalog-filters>
-      <div class="catalog-filter-top">
-        <div><strong>Фильтры</strong><span data-result-count>Найдено: ${products.length}</span></div>
-        <button type="button" class="catalog-reset" data-filter-reset>Сбросить</button>
+      <div class="catalog-filter-inner">
+        <div class="catalog-filter-top">
+          <div><strong>Фильтры</strong><span data-result-count>Найдено: ${products.length}</span></div>
+          <button type="button" class="catalog-reset" data-filter-reset>Сбросить</button>
+        </div>
+        <button type="button" class="catalog-filter-mobile-toggle" data-filter-toggle aria-expanded="false">Показать фильтры</button>
+        <div class="catalog-filter-body" data-filter-body>${sections.join('')}</div>
       </div>
-      <button type="button" class="catalog-filter-mobile-toggle" data-filter-toggle aria-expanded="false">Показать фильтры</button>
-      <div class="catalog-filter-body" data-filter-body>${sections.join('')}</div>
     </aside>`;
   }
 
