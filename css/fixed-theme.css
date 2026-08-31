@@ -1,46 +1,46 @@
-/* Everest — мягкая стальная палитра v5.4
-   Геометрия и тени сохранены от 00 Original. */
+/* Everest — мягкий зелёно-бирюзовый вариант 04, v5.5
+   Цвет снова зелёный, но заметно менее насыщенный. */
 :root{
   color-scheme:light;
-  --bg:#F5F6F4;
-  --bg-2:#E9EEEC;
+  --bg:#F4F8F6;
+  --bg-2:#E2ECE8;
   --card:#FFFFFF;
-  --text:#243238;
-  --muted:#68777C;
-  --accent:#607B86;
-  --accent-2:#496570;
-  --accent-text:#4D6974;
-  --line:rgba(36,50,56,.13);
-  --dark:#293A40;
+  --text:#1F3936;
+  --muted:#687D78;
+  --accent:#4A8882;
+  --accent-2:#34716C;
+  --accent-text:#397770;
+  --line:rgba(31,57,54,.13);
+  --dark:#214744;
   --dark-text:#FFFFFF;
-  --dark-muted:#C7D1D3;
-  --accent-highlight:#91A8B1;
+  --dark-muted:#C8D9D5;
+  --accent-highlight:#7FB1AA;
   --button-text:#FFFFFF;
-  --header-bg:rgba(245,246,244,.95);
-  --mobile-bg:rgba(245,246,244,.98);
+  --header-bg:rgba(244,248,246,.96);
+  --mobile-bg:rgba(244,248,246,.98);
   --hero-text:#FFFFFF;
-  --hero-muted:#CAD4D6;
-  --hero-glow:rgba(124,157,168,.16);
-  --door-frame:#18262B;
-  --door-leaf-1:#5D747D;
-  --door-leaf-2:#344A53;
-  --door-light-1:#EFF4F5;
-  --door-light-2:#AFC2C8;
-  --door-light-3:#607B86;
-  --door-light-4:#334B55;
-  --handle-1:#E5ECE9;
-  --handle-2:#9CAAA5;
-  --entrance-door-1:#63747A;
-  --entrance-door-2:#36474D;
-  --interior-door-1:#C9D2D1;
-  --interior-door-2:#899DA1;
+  --hero-muted:#C9DAD6;
+  --hero-glow:rgba(88,151,143,.18);
+  --door-frame:#17302F;
+  --door-leaf-1:#4E7772;
+  --door-leaf-2:#28524E;
+  --door-light-1:#F0F6F4;
+  --door-light-2:#B8D0CB;
+  --door-light-3:#648F89;
+  --door-light-4:#315B57;
+  --handle-1:#E6EEEB;
+  --handle-2:#9DADA8;
+  --entrance-door-1:#5D7975;
+  --entrance-door-2:#344F4C;
+  --interior-door-1:#CBD8D4;
+  --interior-door-2:#8EA7A2;
 
   --card-radius:20px;
   --small-radius:14px;
   --button-radius:999px;
   --border-width:1px;
-  --card-shadow:0 18px 44px -32px color-mix(in srgb,var(--text) 55%,transparent);
-  --hover-shadow:0 24px 54px -32px color-mix(in srgb,var(--accent) 34%,transparent);
+  --card-shadow:0 18px 44px -32px color-mix(in srgb,var(--text) 48%,transparent);
+  --hover-shadow:0 24px 54px -32px color-mix(in srgb,var(--accent) 32%,transparent);
   --header-shadow:0 1px 0 var(--line);
   --hero-bg:radial-gradient(900px 520px at 72% 45%,var(--hero-glow),transparent 60%),var(--dark);
 }
@@ -111,3 +111,21 @@ h1 em{background:linear-gradient(100deg,var(--accent),var(--accent-highlight));-
 .phone-stack [data-secondary-phone][hidden]{display:none!important}
 [data-max-link][hidden],[data-secondary-contact][hidden]{display:none!important}
 @media(max-width:860px){.phone-stack{display:none}}
+
+
+/* V5.5 — первый экран должен помещать CTA без прокрутки на обычном десктопе */
+@media (min-width:861px){
+  .hero{height:100svh;min-height:620px;padding:112px 28px 54px}
+  .hero-grid{gap:50px}
+  .hero h1{font-size:clamp(38px,4.65vw,64px);margin-bottom:16px}
+  .hero .subtitle{margin-bottom:24px}
+  .hero .facts{margin-top:28px}
+  .hero .door-wrap{max-width:365px}
+}
+@media (min-width:861px) and (max-height:820px){
+  .hero{min-height:560px;padding-top:92px;padding-bottom:38px}
+  .hero h1{font-size:clamp(36px,4.25vw,58px)}
+  .hero .subtitle{font-size:17px;margin-bottom:18px}
+  .hero .facts{margin-top:20px}
+  .hero .door-wrap{max-width:315px}
+}

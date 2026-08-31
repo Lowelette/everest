@@ -49,7 +49,7 @@
       <input type="checkbox" value="${id}" data-filter-${kind} ${groupId!==''?`data-group-id="${groupId}"`:''}>
       <span class="catalog-check-box" aria-hidden="true"></span>
       <span class="catalog-check-name">${escapeHtml(name)}</span>
-      <small>${count}</small>
+      <small>${Number(count) > 0 ? count : ''}</small>
     </label>`;
   }
 
@@ -104,6 +104,8 @@
     const resultLabels=[...shell.closest('.catalog-browser').querySelectorAll('[data-result-count], [data-result-count-head]')];
     const mobileToggle=shell.querySelector('[data-filter-toggle]');
     const body=shell.querySelector('[data-filter-body]');
+    // На коротком каталоге боковушка обычная; на длинном остаётся рядом при прокрутке.
+    shell.classList.toggle('is-sticky', products.length > 12);
 
     const selectedSet = checks => new Set(checks.filter(c=>c.checked).map(c=>Number(c.value)));
     function selectedOptionsByGroup(){
