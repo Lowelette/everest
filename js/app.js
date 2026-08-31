@@ -1,25 +1,32 @@
-/* ============ НАСТРОЙКИ ЗАЯВОК ============ */
-const TG_TOKEN = '';          // токен Telegram-бота (когда будет)
-const TG_CHAT  = '';          // id чата/канала
-const WA_NUMBER = '79297165716';
+/* ============ ЗАЯВКИ: Everest CMS ============ */
+const WA_FALLBACK_NUMBER = '79297165716';
+const EVEREST_API_BASE = window.EVEREST_API_BASE || 'https://everest-api.lowelette.ru';
 
-function sendLead(payload){
-  const lines = Object.entries(payload).map(([key, value]) => `${key}: ${value}`).join('\n');
+async function sendLead(payload){
+  const normalized = {
+    source: payload['Источник'] || 'Сайт',
+    name: payload['Имя'] || 'Не указано',
+    phone: payload['Телефон'] || '',
+    details: Object.fromEntries(Object.entries(payload).filter(([k]) => !['Источник','Имя','Телефон'].includes(k)))
+  };
 
-  if (TG_TOKEN && TG_CHAT){
-    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+  try {
+    await fetch(`${EVEREST_API_BASE}/api/leads`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        chat_id: TG_CHAT,
-        text: '🚪 Новая заявка «Эверест»:\n\n' + lines
-      })
-    }).catch(error => console.warn('TG error:', error));
-    return;
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(normalized)
+    });
+  } catch (error) {
+    console.warn('CMS lead save error:', error);
   }
 
-  const message = encodeURIComponent('🚪 Заявка с сайта «Эверест»:\n' + lines);
-  window.open(`https://wa.me/${WA_NUMBER}?text=${message}`, '_blank', 'noopener');
+  const settings = window.EverestSettings || {};
+  const waNumber = (settings.whatsapp_number || WA_FALLBACK_NUMBER).replace(/\D/g,'');
+  if (waNumber){
+    const lines = Object.entries(payload).map(([key, value]) => `${key}: ${value}`).join('\n');
+    const message = encodeURIComponent('🚪 Заявка с сайта «Эверест»:\n' + lines);
+    window.open(`https://wa.me/${waNumber}?text=${message}`, '_blank', 'noopener');
+  }
 }
 
 /* ---------- шапка + дверь ---------- */

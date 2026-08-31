@@ -106,3 +106,5 @@
   .product-price{max-width:none}
   .product-footer .btn{width:100%}
 }
+
+.catalog-loading{grid-column:1/-1;padding:34px;text-align:center;color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:20px}
