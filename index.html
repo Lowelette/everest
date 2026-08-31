@@ -288,16 +288,71 @@
 </span>
       ЭВЕРЕСТ
     </a>
-<span>Надёжно, как Эверест. Уютно, как дома.</span>
-<span>© <span class="js-year" id="year"></span> · ИП [реквизиты уточнить]</span>
-</div>
-<div class="lowelette-credit-wrap">
-<a class="lowelette-badge" href="https://lowelette.ru/" target="_blank" rel="noopener" aria-label="Сайт Lowelette">
-<span class="lowelette-dot" aria-hidden="true"></span>
-<span class="lowelette-glitch" data-text="собрано Lowelette">собрано Lowelette</span>
-<span class="lowelette-arrow" aria-hidden="true">→</span>
+<span class="footer-requisites">© <span class="js-year" id="year"></span> · ИП [реквизиты уточнить]</span>
+<span class="footer-slogan">Надёжно, как Эверест. Уютно, как дома.</span>
+<a class="lws-sign" href="https://lowelette.ru/" target="_blank" rel="noopener">
+  <span class="lws-dot"></span>
+  <span class="lws-txt" data-txt="собрано Lowelette">собрано Lowelette</span>
+  <span class="lws-ar">→</span>
+  <i class="lws-sgl lws-g1"></i><i class="lws-sgl lws-g2"></i><i class="lws-sgl lws-g3"></i><i class="lws-sgl lws-g4"></i>
 </a>
 </div>
+<style>
+.lws-sign{--lws-acid:#C6FF3E;--lws-dim:rgba(198,255,62,.14);
+  position:relative;display:inline-flex;align-items:center;gap:12px;margin:20px 0;
+  border:1px solid rgba(255,255,255,.22);background:#0b0b0d;border-radius:10px;padding:18px 26px;
+  font:500 13px/1 'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  letter-spacing:.08em;color:#9aa0a6;text-decoration:none;box-sizing:border-box;
+  transition:border-color .3s,color .3s,box-shadow .3s}
+.lws-sign:hover{border-color:var(--lws-acid);color:#f2f2f0;box-shadow:0 0 26px var(--lws-dim)}
+.lws-dot{width:7px;height:7px;border-radius:50%;background:var(--lws-acid);box-shadow:0 0 10px var(--lws-acid);animation:lws-pulse 2s infinite;flex:none}
+@keyframes lws-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+.lws-txt{position:relative;display:inline-block}
+.lws-txt::before,.lws-txt::after{content:attr(data-txt);position:absolute;left:0;top:0;width:100%;opacity:0;pointer-events:none}
+.lws-ar{transition:transform .3s;color:var(--lws-acid)}
+.lws-sign:hover .lws-ar{transform:translateX(5px)}
+.lws-sgl{position:absolute;opacity:0;pointer-events:none;background:var(--lws-acid)}
+.lws-g1{top:-4px;left:24%;width:14px;height:3px}
+.lws-g2{bottom:-5px;right:16%;width:9px;height:2px;background:#fff}
+.lws-g3{top:38%;right:-7px;width:3px;height:9px}
+.lws-g4{top:-6px;right:30%;width:2px;height:2px;background:#ff4d4d}
+.lws-sign.lws-glitching{animation:lws-shake .34s steps(2,end)}
+.lws-sign.lws-glitching .lws-txt{text-shadow:2px 0 rgba(255,77,77,.75),-2px 0 rgba(0,224,255,.75)}
+.lws-sign.lws-glitching .lws-txt::before{opacity:.85;color:var(--lws-acid);animation:lws-slice-a .34s steps(3,end)}
+.lws-sign.lws-glitching .lws-txt::after{opacity:.85;color:#ff4d4d;animation:lws-slice-b .34s steps(3,end)}
+.lws-sign.lws-glitching .lws-sgl{opacity:1;animation:lws-sgl-f .34s steps(2,end)}
+@keyframes lws-shake{0%{transform:translate(0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-1px)}100%{transform:translate(0)}}
+@keyframes lws-slice-a{0%{clip-path:inset(0 0 65% 0);transform:translate(-3px,-2px)}50%{clip-path:inset(30% 0 35% 0);transform:translate(3px,1px)}100%{clip-path:inset(60% 0 0 0);transform:translate(-2px,2px)}}
+@keyframes lws-slice-b{0%{clip-path:inset(55% 0 0 0);transform:translate(3px,2px)}50%{clip-path:inset(10% 0 60% 0);transform:translate(-3px,-1px)}100%{clip-path:inset(0 0 70% 0);transform:translate(2px,-2px)}}
+@keyframes lws-sgl-f{50%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){.lws-sign,.lws-sign *{animation:none!important;transition:none!important}}
+</style>
+<script>
+(function(){
+  if(window.__lwsSignInit)return;window.__lwsSignInit=true;
+  var RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GL='▓▒█<>/#─┼·';
+  document.querySelectorAll('.lws-sign').forEach(function(sign){
+    var txt=sign.querySelector('.lws-txt');
+    if(!txt||RM)return;
+    var orig=txt.dataset.txt||txt.textContent,busy=false;
+    function burst(){
+      if(busy)return;busy=true;
+      sign.classList.add('lws-glitching');
+      var n=0;
+      var iv=setInterval(function(){
+        var out=orig.split('');
+        var k=2+(Math.random()*3|0);
+        for(var i=0;i<k;i++){out[Math.random()*out.length|0]=GL[Math.random()*GL.length|0];}
+        txt.textContent=out.join('');
+        if(++n>2){clearInterval(iv);txt.textContent=orig;sign.classList.remove('lws-glitching');busy=false;}
+      },70);
+    }
+    (function sched(){setTimeout(function(){burst();sched();},2600+Math.random()*3400)})();
+    sign.addEventListener('mouseenter',burst);
+  });
+})();
+</script>
 </footer>
 <!-- ПЛАВАЮЩИЙ WHATSAPP -->
 <a aria-label="Написать в WhatsApp" class="wa-float" data-wa-link="" data-wa-text="Здравствуйте! Хочу подобрать дверь." href="#" target="_blank">
