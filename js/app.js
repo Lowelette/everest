@@ -10,22 +10,14 @@ async function sendLead(payload){
     details: Object.fromEntries(Object.entries(payload).filter(([k]) => !['Источник','Имя','Телефон'].includes(k)))
   };
 
-  try {
-    await fetch(`${EVEREST_API_BASE}/api/leads`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(normalized)
-    });
-  } catch (error) {
-    console.warn('CMS lead save error:', error);
-  }
+  const response = await fetch(`${EVEREST_API_BASE}/api/leads`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(normalized)
+  });
 
-  const settings = window.EverestSettings || {};
-  const waNumber = (settings.whatsapp_number || WA_FALLBACK_NUMBER).replace(/\D/g,'');
-  if (waNumber){
-    const lines = Object.entries(payload).map(([key, value]) => `${key}: ${value}`).join('\n');
-    const message = encodeURIComponent('🚪 Заявка с сайта «Эверест»:\n' + lines);
-    window.open(`https://wa.me/${waNumber}?text=${message}`, '_blank', 'noopener');
+  if (!response.ok) {
+    throw new Error('Не удалось отправить заявку');
   }
 }
 
@@ -113,10 +105,10 @@ if (qBody && qFill && qBack && qNext){
 
     qBody.innerHTML = `
       <div class="q-count">Последний шаг</div>
-      <div class="q-title">Куда прислать подходящие варианты?</div>
+      <div class="q-title">Как с вами связаться?</div>
       <div class="field"><input type="text" id="q-name" placeholder="Как вас зовут?"></div>
-      <div class="field"><input type="tel" id="q-phone" placeholder="Телефон или WhatsApp"></div>
-      <p class="q-gift">🎁 Заодно закрепим за вами подарок: фурнитуру при заказе установки.</p>`;
+      <div class="field"><input type="tel" id="q-phone" placeholder="Телефон"></div>
+      <p class="q-gift">Скидка 5% действует для работников ВАЗа, пенсионеров и участников СВО.</p>`;
     qNext.disabled = false;
     qNext.textContent = 'Получить варианты →';
   }
@@ -159,7 +151,7 @@ if (qBody && qFill && qBack && qNext){
       <div class="q-done">
         <div class="q-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></div>
         <h3>Готово! Уже подбираем варианты</h3>
-        <p>Откроется WhatsApp с готовой заявкой.<br>Ваши ответы:</p>
+        <p>Спасибо! Менеджер свяжется с вами в рабочее время.<br>Ваши ответы:</p>
         ${qAnswers.map(answer => `<span class="q-chip">${answer}</span>`).join('')}
       </div>`;
   });

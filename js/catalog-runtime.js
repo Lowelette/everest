@@ -42,7 +42,7 @@
         ? products.map((p,i)=>card(p,i,category)).join('')
         : `<div class="catalog-loading">Пока здесь нет опубликованных моделей.</div>`;
     } catch (e) {
-      grid.innerHTML = `<div class="catalog-loading">Не удалось загрузить каталог. Напишите нам — пришлём актуальные варианты.</div>`;
+      grid.innerHTML = `<div class="catalog-loading">Не удалось загрузить каталог. Оставьте заявку — подскажем актуальные варианты.</div>`;
     }
   }
   document.addEventListener('DOMContentLoaded', () => document.querySelectorAll('[data-product-grid]').forEach(loadGrid));
