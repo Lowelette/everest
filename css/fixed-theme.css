@@ -1,39 +1,39 @@
-/* Everest — зафиксированная палитра 04 (Mr. Business)
+/* Everest — мягкая стальная палитра v5.4
    Геометрия и тени сохранены от 00 Original. */
 :root{
   color-scheme:light;
-  --bg:#F4FBFA;
-  --bg-2:#E4F2F1;
+  --bg:#F5F6F4;
+  --bg-2:#E9EEEC;
   --card:#FFFFFF;
-  --text:#112D2E;
-  --muted:#567172;
-  --accent:#167C80;
-  --accent-2:#0E5D60;
-  --accent-text:#126E72;
-  --line:rgba(17,45,46,.14);
-  --dark:#12383A;
+  --text:#243238;
+  --muted:#68777C;
+  --accent:#607B86;
+  --accent-2:#496570;
+  --accent-text:#4D6974;
+  --line:rgba(36,50,56,.13);
+  --dark:#293A40;
   --dark-text:#FFFFFF;
-  --dark-muted:#BFDBD9;
-  --accent-highlight:#54BABC;
+  --dark-muted:#C7D1D3;
+  --accent-highlight:#91A8B1;
   --button-text:#FFFFFF;
-  --header-bg:rgba(244,251,250,.94);
-  --mobile-bg:rgba(244,251,250,.97);
+  --header-bg:rgba(245,246,244,.95);
+  --mobile-bg:rgba(245,246,244,.98);
   --hero-text:#FFFFFF;
-  --hero-muted:#C7E1DF;
-  --hero-glow:rgba(74,190,190,.24);
-  --door-frame:#06191A;
-  --door-leaf-1:#2E696B;
-  --door-leaf-2:#153C3E;
-  --door-light-1:#E9FFFF;
-  --door-light-2:#75D2D1;
-  --door-light-3:#167C80;
-  --door-light-4:#093437;
+  --hero-muted:#CAD4D6;
+  --hero-glow:rgba(124,157,168,.16);
+  --door-frame:#18262B;
+  --door-leaf-1:#5D747D;
+  --door-leaf-2:#344A53;
+  --door-light-1:#EFF4F5;
+  --door-light-2:#AFC2C8;
+  --door-light-3:#607B86;
+  --door-light-4:#334B55;
   --handle-1:#E5ECE9;
   --handle-2:#9CAAA5;
-  --entrance-door-1:#3C5C5E;
-  --entrance-door-2:#1A3031;
-  --interior-door-1:#B1CAC7;
-  --interior-door-2:#6E918D;
+  --entrance-door-1:#63747A;
+  --entrance-door-2:#36474D;
+  --interior-door-1:#C9D2D1;
+  --interior-door-2:#899DA1;
 
   --card-radius:20px;
   --small-radius:14px;

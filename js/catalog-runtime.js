@@ -66,7 +66,7 @@
       if(rows) sections.push(`<section class="catalog-filter-section" data-filter-group="${g.id}"><h3>${escapeHtml(g.name)}</h3><div class="catalog-check-list">${rows}</div></section>`);
     }
     if(meta.price_min||meta.price_max){
-      sections.push(`<section class="catalog-filter-section"><h3>Цена</h3><div class="catalog-price-filter"><label><span>от</span><input inputmode="numeric" autocomplete="off" placeholder="от" data-price-min></label><span class="catalog-price-dash">—</span><label><span>до</span><input inputmode="numeric" autocomplete="off" placeholder="до" data-price-max></label></div></section>`);
+      sections.push(`<section class="catalog-filter-section"><h3>Цена</h3><div class="catalog-price-filter"><label><span>от</span><input inputmode="numeric" autocomplete="off" placeholder="${meta.price_min ? 'от '+formatNumber(meta.price_min) : 'от'}" data-price-min></label><span class="catalog-price-dash">—</span><label><span>до</span><input inputmode="numeric" autocomplete="off" placeholder="${meta.price_max ? 'до '+formatNumber(meta.price_max) : 'до'}" data-price-max></label></div></section>`);
     }
     return `<aside class="catalog-filter-shell" data-catalog-filters>
       <div class="catalog-filter-top">
