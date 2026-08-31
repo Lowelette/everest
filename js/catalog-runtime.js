@@ -41,71 +41,154 @@
     </article>`;
   }
 
-  function filtersMarkup(meta){
-    const hasFilters=(meta.factories?.length||meta.classes?.length||meta.groups?.length||meta.price_min||meta.price_max);
-    if(!hasFilters) return '';
-    const groups=(meta.groups||[]).map(g=>`<details class="catalog-filter-dropdown" data-filter-group="${g.id}"><summary>${escapeHtml(g.name)} <b data-filter-count="${g.id}"></b></summary><div class="catalog-filter-options">${(g.options||[]).map(o=>`<label><input type="checkbox" value="${o.id}"><span>${escapeHtml(o.name)}</span></label>`).join('')}</div></details>`).join('');
-    return `<section class="catalog-filter-shell" data-catalog-filters>
+  const productHasOption = (p,id) => (p.filter_options||[]).some(o=>Number(o.id)===Number(id));
+  const countFor = (products, predicate) => products.reduce((n,p)=>n+(predicate(p)?1:0),0);
+
+  function checkRow({kind,id,name,count,factoryId='',groupId=''}){
+    return `<label class="catalog-check" ${factoryId!==''?`data-factory-id="${factoryId}"`:''}>
+      <input type="checkbox" value="${id}" data-filter-${kind} ${groupId!==''?`data-group-id="${groupId}"`:''}>
+      <span class="catalog-check-box" aria-hidden="true"></span>
+      <span class="catalog-check-name">${escapeHtml(name)}</span>
+      <small>${count}</small>
+    </label>`;
+  }
+
+  function filtersMarkup(meta, products){
+    const sections=[];
+    if(meta.factories?.length){
+      sections.push(`<section class="catalog-filter-section"><h3>Фабрика</h3><div class="catalog-check-list">${meta.factories.map(f=>checkRow({kind:'factory',id:f.id,name:f.name,count:countFor(products,p=>Number(p.factory?.id)===Number(f.id))})).join('')}</div></section>`);
+    }
+    if(meta.classes?.length){
+      sections.push(`<section class="catalog-filter-section"><h3>Серия / класс</h3><div class="catalog-check-list" data-class-list>${meta.classes.map(c=>checkRow({kind:'class',id:c.id,name:c.name,count:countFor(products,p=>Number(p.door_class?.id)===Number(c.id)),factoryId:c.factory_id||''})).join('')}</div></section>`);
+    }
+    for(const g of meta.groups||[]){
+      const rows=(g.options||[]).map(o=>checkRow({kind:'option',id:o.id,name:o.name,count:countFor(products,p=>productHasOption(p,o.id)),groupId:g.id})).join('');
+      if(rows) sections.push(`<section class="catalog-filter-section" data-filter-group="${g.id}"><h3>${escapeHtml(g.name)}</h3><div class="catalog-check-list">${rows}</div></section>`);
+    }
+    if(meta.price_min||meta.price_max){
+      sections.push(`<section class="catalog-filter-section"><h3>Цена</h3><div class="catalog-price-filter"><label><span>от</span><input inputmode="numeric" autocomplete="off" placeholder="от" data-price-min></label><span class="catalog-price-dash">—</span><label><span>до</span><input inputmode="numeric" autocomplete="off" placeholder="до" data-price-max></label></div></section>`);
+    }
+    return `<aside class="catalog-filter-shell" data-catalog-filters>
       <div class="catalog-filter-top">
-        <div><strong>Фильтры</strong><span data-result-count></span></div>
+        <div><strong>Фильтры</strong><span data-result-count>Найдено: ${products.length}</span></div>
         <button type="button" class="catalog-reset" data-filter-reset>Сбросить</button>
       </div>
-      <div class="catalog-filter-row">
-        ${meta.factories?.length?`<label class="catalog-filter-field"><span>Фабрика</span><select data-filter-factory><option value="">Все фабрики</option>${meta.factories.map(f=>`<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('')}</select></label>`:''}
-        ${meta.classes?.length?`<label class="catalog-filter-field"><span>Серия / класс</span><select data-filter-class><option value="">Все серии</option>${meta.classes.map(c=>`<option value="${c.id}" data-factory-id="${c.factory_id||''}">${escapeHtml(c.name)}</option>`).join('')}</select></label>`:''}
-        ${groups}
-        ${(meta.price_min||meta.price_max)?`<div class="catalog-price-filter"><span>Цена, ₽</span><div><input inputmode="numeric" placeholder="от${meta.price_min?` ${formatNumber(meta.price_min)}`:''}" data-price-min><i>—</i><input inputmode="numeric" placeholder="до${meta.price_max?` ${formatNumber(meta.price_max)}`:''}" data-price-max></div></div>`:''}
-      </div>
-    </section>`;
+      <button type="button" class="catalog-filter-mobile-toggle" data-filter-toggle aria-expanded="false">Показать фильтры</button>
+      <div class="catalog-filter-body" data-filter-body>${sections.join('')}</div>
+    </aside>`;
+  }
+
+  function createBrowser(grid, meta, products){
+    const browser=document.createElement('div');
+    browser.className='catalog-browser';
+    const temp=document.createElement('div');
+    temp.innerHTML=filtersMarkup(meta,products);
+    const shell=temp.firstElementChild;
+    const results=document.createElement('div');
+    results.className='catalog-results';
+    results.innerHTML=`<div class="catalog-results-head"><span>Каталог</span><strong data-result-count-head>${products.length} моделей</strong></div>`;
+    grid.parentNode.insertBefore(browser,grid);
+    browser.appendChild(shell);
+    browser.appendChild(results);
+    results.appendChild(grid);
+    return {browser,shell,results};
   }
 
   function bindFilters(shell, products, meta, grid, category){
     if(!shell) return;
-    const factory=shell.querySelector('[data-filter-factory]');
-    const classSelect=shell.querySelector('[data-filter-class]');
+    const factoryChecks=[...shell.querySelectorAll('[data-filter-factory]')];
+    const classChecks=[...shell.querySelectorAll('[data-filter-class]')];
+    const optionChecks=[...shell.querySelectorAll('[data-filter-option]')];
     const minInput=shell.querySelector('[data-price-min]');
     const maxInput=shell.querySelector('[data-price-max]');
-    const checks=[...shell.querySelectorAll('[data-filter-group] input[type="checkbox"]')];
-    const result=shell.querySelector('[data-result-count]');
-    function updateClassOptions(){
-      if(!classSelect) return;
-      const fid=factory?.value||'';
-      [...classSelect.options].forEach((o,i)=>{if(i===0)return;const own=o.dataset.factoryId||'';o.hidden=!!fid && !!own && own!==fid});
-      const selected=classSelect.selectedOptions[0]; if(selected?.hidden) classSelect.value='';
-    }
-    function selectedByGroup(){
+    const resultLabels=[...shell.closest('.catalog-browser').querySelectorAll('[data-result-count], [data-result-count-head]')];
+    const mobileToggle=shell.querySelector('[data-filter-toggle]');
+    const body=shell.querySelector('[data-filter-body]');
+
+    const selectedSet = checks => new Set(checks.filter(c=>c.checked).map(c=>Number(c.value)));
+    function selectedOptionsByGroup(){
       const map=new Map();
-      checks.filter(c=>c.checked).forEach(c=>{const gid=Number(c.closest('[data-filter-group]').dataset.filterGroup);if(!map.has(gid))map.set(gid,new Set());map.get(gid).add(Number(c.value))});
+      optionChecks.filter(c=>c.checked).forEach(c=>{
+        const gid=Number(c.dataset.groupId);
+        if(!map.has(gid)) map.set(gid,new Set());
+        map.get(gid).add(Number(c.value));
+      });
       return map;
     }
-    function updateCounts(){
-      (meta.groups||[]).forEach(g=>{const n=checks.filter(c=>c.checked&&Number(c.closest('[data-filter-group]').dataset.filterGroup)===Number(g.id)).length;const b=shell.querySelector(`[data-filter-count="${g.id}"]`);if(b)b.textContent=n?`(${n})`:''})
+    function updateClassAvailability(){
+      const factories=selectedSet(factoryChecks);
+      classChecks.forEach(c=>{
+        const row=c.closest('.catalog-check');
+        const own=Number(row?.dataset.factoryId)||null;
+        const hide=factories.size>0 && own && !factories.has(own);
+        if(hide) c.checked=false;
+        if(row) row.hidden=hide;
+      });
+      const list=shell.querySelector('[data-class-list]');
+      if(list){
+        const any=[...list.querySelectorAll('.catalog-check')].some(x=>!x.hidden);
+        list.closest('.catalog-filter-section').hidden=!any;
+      }
+    }
+    function setResultCount(n){
+      resultLabels.forEach(el=>{
+        if(el.hasAttribute('data-result-count')) el.textContent=`Найдено: ${n}`;
+        else el.textContent=`${n} ${n%10===1&&n%100!==11?'модель':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'модели':'моделей')}`;
+      });
     }
     function apply(){
-      const fid=Number(factory?.value)||null;
-      const cid=Number(classSelect?.value)||null;
+      const factories=selectedSet(factoryChecks);
+      const classes=selectedSet(classChecks);
+      const groups=selectedOptionsByGroup();
       const min=Number(digits(minInput?.value))||null;
       const max=Number(digits(maxInput?.value))||null;
-      const groups=selectedByGroup();
       const filtered=products.filter(p=>{
-        if(fid && Number(p.factory?.id)!==fid) return false;
-        if(cid && Number(p.door_class?.id)!==cid) return false;
-        if(min||max){const price=Number(p.price_amount)||0;if(!price)return false;if(min&&price<min)return false;if(max&&price>max)return false;}
+        if(factories.size && !factories.has(Number(p.factory?.id))) return false;
+        if(classes.size && !classes.has(Number(p.door_class?.id))) return false;
+        if(min||max){
+          const price=Number(p.price_amount)||0;
+          if(!price) return false;
+          if(min&&price<min) return false;
+          if(max&&price>max) return false;
+        }
         const productOptions=new Set((p.filter_options||[]).map(x=>Number(x.id)));
-        for(const selected of groups.values()){let ok=false;for(const id of selected){if(productOptions.has(id)){ok=true;break}}if(!ok)return false;}
+        for(const selected of groups.values()){
+          let ok=false;
+          for(const id of selected){ if(productOptions.has(id)){ok=true;break;} }
+          if(!ok) return false;
+        }
         return true;
       });
       grid.innerHTML=filtered.length?filtered.map((p,i)=>card(p,i,category)).join(''):`<div class="catalog-loading">По выбранным фильтрам моделей пока нет. Попробуйте изменить параметры.</div>`;
-      if(result) result.textContent=`Найдено: ${filtered.length}`;
-      updateCounts();
+      setResultCount(filtered.length);
+      shell.classList.toggle('has-active-filters',factoryChecks.some(c=>c.checked)||classChecks.some(c=>c.checked)||optionChecks.some(c=>c.checked)||!!digits(minInput?.value)||!!digits(maxInput?.value));
     }
-    function formatPriceInput(input){if(!input)return;const d=digits(input.value);input.value=d?formatNumber(d):''}
-    factory?.addEventListener('change',()=>{updateClassOptions();apply()});
-    classSelect?.addEventListener('change',apply);
-    checks.forEach(c=>c.addEventListener('change',apply));
-    [minInput,maxInput].forEach(i=>{i?.addEventListener('input',()=>{const pos=i.selectionStart;const raw=digits(i.value);i.value=raw?formatNumber(raw):'';try{i.setSelectionRange(i.value.length,i.value.length)}catch(_){};apply()});i?.addEventListener('blur',()=>formatPriceInput(i))});
-    shell.querySelector('[data-filter-reset]')?.addEventListener('click',()=>{if(factory)factory.value='';if(classSelect){classSelect.value='';[...classSelect.options].forEach(o=>o.hidden=false)}checks.forEach(c=>c.checked=false);if(minInput)minInput.value='';if(maxInput)maxInput.value='';apply()});
-    updateClassOptions(); apply();
+    function formatPriceInput(input){
+      if(!input)return;
+      const d=digits(input.value);
+      input.value=d?formatNumber(d):'';
+    }
+    factoryChecks.forEach(c=>c.addEventListener('change',()=>{updateClassAvailability();apply();}));
+    classChecks.forEach(c=>c.addEventListener('change',apply));
+    optionChecks.forEach(c=>c.addEventListener('change',apply));
+    [minInput,maxInput].forEach(i=>{
+      i?.addEventListener('input',()=>{const raw=digits(i.value);i.value=raw?formatNumber(raw):'';try{i.setSelectionRange(i.value.length,i.value.length)}catch(_){};apply();});
+      i?.addEventListener('blur',()=>formatPriceInput(i));
+    });
+    shell.querySelector('[data-filter-reset]')?.addEventListener('click',()=>{
+      [...factoryChecks,...classChecks,...optionChecks].forEach(c=>c.checked=false);
+      if(minInput)minInput.value='';
+      if(maxInput)maxInput.value='';
+      updateClassAvailability();
+      apply();
+    });
+    mobileToggle?.addEventListener('click',()=>{
+      const open=shell.classList.toggle('mobile-open');
+      mobileToggle.setAttribute('aria-expanded',String(open));
+      mobileToggle.textContent=open?'Скрыть фильтры':'Показать фильтры';
+    });
+    updateClassAvailability();
+    apply();
   }
 
   async function loadGrid(grid){
@@ -116,9 +199,10 @@
       const data = await r.json();
       const products = data.products || [];
       const meta=data.meta||{};
-      const old=grid.parentElement.querySelector('[data-catalog-filters]'); if(old) old.remove();
+      const existing=grid.closest('.catalog-browser');
+      if(existing){ const parent=existing.parentNode; parent.insertBefore(grid,existing); existing.remove(); }
       if(products.length){
-        const wrap=document.createElement('div');wrap.innerHTML=filtersMarkup(meta);const shell=wrap.firstElementChild;if(shell)grid.before(shell);
+        const {shell}=createBrowser(grid,meta,products);
         bindFilters(shell,products,meta,grid,category);
       }else grid.innerHTML=`<div class="catalog-loading">Пока здесь нет опубликованных моделей.</div>`;
     } catch (e) {
