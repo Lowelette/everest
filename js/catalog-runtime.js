@@ -11,6 +11,44 @@
     return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
   };
 
+  const settingOn = (key, fallback=true) => {
+    const v=(window.EverestSettings||{})[key];
+    if(v==null||v==='') return fallback;
+    return ['1','true','yes','on'].includes(String(v).toLowerCase());
+  };
+  const maxUrl = () => String((window.EverestSettings||{}).max_url||'').trim();
+  function groupedOptions(product){
+    const groups=new Map();
+    for(const o of product.filter_options||[]){const g=o.group_name||'Параметры';if(!groups.has(g))groups.set(g,[]);groups.get(g).push(o.name)}
+    return [...groups.entries()];
+  }
+  function productVisual(product, category, index=0){
+    if(product.image_url) return `<img class="product-detail-image" src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">`;
+    return `<div class="product-detail-placeholder catalog-door ${category==='interior'?'interior ':''}${escapeHtml(product.visual_style||`v${(index%6)+1}`)}" aria-hidden="true"></div>`;
+  }
+  function ensureDetailsDialog(){
+    let dialog=document.querySelector('#product-detail-dialog');
+    if(dialog) return dialog;
+    dialog=document.createElement('dialog');dialog.id='product-detail-dialog';dialog.className='product-detail-dialog';
+    dialog.innerHTML='<div class="product-detail-shell"><button type="button" class="product-detail-close" aria-label="Закрыть">×</button><div data-product-detail-body></div></div>';
+    document.body.appendChild(dialog);
+    dialog.querySelector('.product-detail-close').addEventListener('click',()=>dialog.close());
+    dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
+    return dialog;
+  }
+  function openProductDetails(product, category, index=0){
+    const dialog=ensureDetailsDialog();
+    const features=Array.isArray(product.features)?product.features:[];
+    const groups=groupedOptions(product);
+    const max=maxUrl();
+    const showMax=!!max&&settingOn('max_enabled',true);
+    const wa=waUrl(product.name);
+    const showWa=settingOn('whatsapp_enabled',true)&&/wa\.me\//.test(wa);
+    dialog.querySelector('[data-product-detail-body]').innerHTML=`<div class="product-detail-grid"><div class="product-detail-media">${productVisual(product,category,index)}${product.badge?`<span class="product-detail-badge">${escapeHtml(product.badge)}</span>`:''}</div><div class="product-detail-info">${product.tagline?`<span class="product-detail-tag">${escapeHtml(product.tagline)}</span>`:''}<h2>${escapeHtml(product.name)}</h2><strong class="product-detail-price">${escapeHtml(formatPrice(product))}</strong>${product.description?`<p class="product-detail-description">${escapeHtml(product.description)}</p>`:''}${features.length?`<section><h3>Характеристики</h3><ul class="product-detail-features">${features.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></section>`:''}${groups.length?`<section><h3>Параметры</h3><div class="product-detail-groups">${groups.map(([g,values])=>`<div><strong>${escapeHtml(g)}</strong><span>${values.map(escapeHtml).join(' · ')}</span></div>`).join('')}</div></section>`:''}<div class="product-detail-actions"><a class="btn btn-primary" href="#form" data-detail-measure>Бесплатный замер</a>${showMax?`<a class="btn btn-ghost" href="${escapeHtml(max)}" target="_blank" rel="noopener">Написать в MAX</a>`:''}${showWa?`<a class="btn btn-ghost" href="${escapeHtml(wa)}" target="_blank" rel="noopener">WhatsApp</a>`:''}</div></div></div>`;
+    dialog.querySelector('[data-detail-measure]')?.addEventListener('click',()=>dialog.close());
+    dialog.showModal();
+  }
+
   function card(product, index, category){
     let features = [];
     try { features = Array.isArray(product.features) ? product.features : JSON.parse(product.features_json || '[]'); } catch(_){}
@@ -28,10 +66,10 @@
         ${product.tagline ? `<span class="product-tag">${escapeHtml(product.tagline)}</span>` : ''}
         <h3>${escapeHtml(product.name)}</h3>
         ${product.description?`<p class="product-description">${escapeHtml(product.description)}</p>`:''}
-        ${shownFeatures.length ? `<ul class="product-points">${shownFeatures.map(f => `<li>${escapeHtml(f)}</li>`).join('')}${features.length>2?`<li class="more-point">+ ещё ${features.length-2}</li>`:''}</ul>` : ''}
+        ${shownFeatures.length ? `<ul class="product-points">${shownFeatures.map(f => `<li>${escapeHtml(f)}</li>`).join('')}${features.length>2?`<li><button class="more-point" type="button" data-product-details="${product.id}">+ ещё ${features.length-2}</button></li>`:''}</ul>` : ''}
         <div class="product-footer">
           <strong class="product-price">${escapeHtml(formatPrice(product))}</strong>
-          <a class="btn btn-primary" href="${waUrl(product.name)}" target="_blank" rel="noopener">Подробнее</a>
+          <button class="btn btn-primary" type="button" data-product-details="${product.id}">Подробнее</button>
         </div>
       </div>
     </article>`;
@@ -96,6 +134,14 @@
     const body=shell.querySelector('[data-filter-body]');
     // На коротком каталоге боковушка обычная; на длинном остаётся рядом при прокрутке.
     shell.classList.toggle('is-sticky', products.length > 12);
+    if(!grid.dataset.productDetailsBound){
+      grid.dataset.productDetailsBound='1';
+      grid.addEventListener('click',e=>{
+        const btn=e.target.closest('[data-product-details]');if(!btn)return;
+        const product=products.find(p=>Number(p.id)===Number(btn.dataset.productDetails));if(!product)return;
+        e.preventDefault();openProductDetails(product,category,products.indexOf(product));
+      });
+    }
 
     const selectedSet = checks => new Set(checks.filter(c=>c.checked).map(c=>Number(c.value)));
     function selectedOptionsByGroup(){
