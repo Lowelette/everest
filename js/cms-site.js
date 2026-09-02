@@ -9,7 +9,8 @@
     hours: 'Пн–Пт 10:00–19:00 · Сб–Вс 10:00–18:00',
     hours_short: 'Ежедневно с 10:00',
     promo_title: 'Скидка 5% на всю сумму договора',
-    promo_text: 'Для работников ВАЗа, пенсионеров и участников СВО. Подробности уточняйте у менеджера.'
+    promo_text: 'Для работников ВАЗа, пенсионеров и участников СВО. Подробности уточняйте у менеджера.',
+    footer_requisites: 'ИП [реквизиты уточнить]'
   };
 
   const digits = value => String(value || '').replace(/\D/g, '');
@@ -18,6 +19,11 @@
     const n = digits(number);
     if (!n) return '#';
     return `https://wa.me/${n}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
+  };
+  const boolSetting = (settings, key, fallback=false) => {
+    const v = settings[key];
+    if (v == null || v === '') return !!fallback;
+    return ['1','true','yes','on'].includes(String(v).toLowerCase());
   };
 
   function apply(settings){
@@ -35,19 +41,34 @@
       else if (!small) el.textContent = s.phone_primary;
     });
     const secondary = String(s.phone_secondary || '').trim();
+    const secondaryVisible = !!secondary && boolSetting(s, 'phone_secondary_enabled', !!secondary);
     document.querySelectorAll('[data-setting-phone="secondary"]').forEach(el => {
-      if (secondary){
+      if (secondaryVisible){
         el.hidden = false; el.removeAttribute('hidden');
         el.href = `tel:${telHref(secondary)}`; el.textContent = secondary;
       } else { el.hidden = true; }
     });
-    document.querySelectorAll('[data-secondary-contact]').forEach(el => { el.hidden = !secondary; });
+    document.querySelectorAll('[data-secondary-contact]').forEach(el => { el.hidden = !secondaryVisible; });
+
+    const waNumber = String(s.whatsapp_number || '').trim();
+    const waVisible = !!digits(waNumber) && boolSetting(s, 'whatsapp_enabled', !!digits(waNumber));
     document.querySelectorAll('[data-wa-link]').forEach(el => {
-      el.href = waHref(s.whatsapp_number, el.dataset.waText || '');
+      el.hidden = !waVisible;
+      if (waVisible) el.href = waHref(waNumber, el.dataset.waText || '');
     });
+    document.querySelectorAll('[data-wa-block]').forEach(el => { el.hidden = !waVisible; });
+
     const maxUrl = String(s.max_url || '').trim();
-    document.querySelectorAll('[data-max-link]').forEach(el => { el.hidden = !maxUrl; });
-    document.querySelectorAll('[data-max-anchor]').forEach(el => { if (maxUrl) el.href = maxUrl; });
+    const maxVisible = !!maxUrl && boolSetting(s, 'max_enabled', !!maxUrl);
+    document.querySelectorAll('[data-max-link]').forEach(el => { el.hidden = !maxVisible; });
+    document.querySelectorAll('[data-max-block]').forEach(el => { el.hidden = !maxVisible; });
+    document.querySelectorAll('[data-max-anchor]').forEach(el => { if (maxVisible) el.href = maxUrl; });
+
+    const promoVisible = boolSetting(s, 'promo_enabled', true);
+    document.querySelectorAll('[data-promo-block]').forEach(el => { el.hidden = !promoVisible; });
+
+    const footerReq = String(s.footer_requisites || '').trim();
+    document.querySelectorAll('[data-footer-requisites]').forEach(el => { el.hidden = !footerReq; });
   }
 
   window.EverestCms = {applySettings: apply};
