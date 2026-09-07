@@ -340,3 +340,27 @@ img,svg,video,canvas{max-width:100%}
 .hero .badge[data-promo-block]{display:inline-flex;align-items:center}
 .hero .badge[data-promo-block][hidden]{display:none!important}
 .btn-max .messenger-icon{background:#fff;border-radius:6px;padding:2px;box-sizing:border-box}
+
+/* ===== Everest v6.7 — calmer MAX outline ===== */
+.btn-max{
+  background:rgba(71,26,255,.035)!important;
+  border:2px solid rgba(71,26,255,.72)!important;
+  color:#3f2bd6!important;
+  box-shadow:none!important;
+}
+.btn-max:hover{
+  background:rgba(71,26,255,.085)!important;
+  border-color:#471AFF!important;
+  color:#351fc4!important;
+  box-shadow:0 9px 24px -20px rgba(71,26,255,.7)!important;
+}
+.catalog-hero .btn-max,.hero .btn-max,.dark .btn-max{
+  background:rgba(71,26,255,.075)!important;
+  border-color:#7c6cff!important;
+  color:#fff!important;
+}
+.catalog-hero .btn-max:hover,.hero .btn-max:hover,.dark .btn-max:hover{
+  background:rgba(71,26,255,.15)!important;
+  border-color:#9588ff!important;
+  color:#fff!important;
+}

@@ -167,8 +167,13 @@
     if(!grid.dataset.productDetailsBound){
       grid.dataset.productDetailsBound='1';
       grid.addEventListener('click',e=>{
-        const btn=e.target.closest('[data-product-details]');if(!btn)return;
-        const product=products.find(p=>Number(p.id)===Number(btn.dataset.productDetails));if(!product)return;
+        const btn=e.target.closest('[data-product-details]');
+        const cardEl=e.target.closest('.product-card');
+        if(!btn&&!cardEl)return;
+        // Gallery controls and other explicit interactive elements keep their own behaviour.
+        if(!btn&&e.target.closest('[data-gallery-step],[data-gallery-dot],a,button,input,label,select,textarea'))return;
+        const id=btn?btn.dataset.productDetails:cardEl?.dataset.productId;
+        const product=products.find(p=>Number(p.id)===Number(id));if(!product)return;
         e.preventDefault();openProductDetails(product,category,products.indexOf(product));
       });
     }
