@@ -163,8 +163,11 @@
 
   /* ======= МАСТЕР ======= */
   .master{display:grid;grid-template-columns:340px 1fr;gap:40px;align-items:center;margin-top:48px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:36px}
-  .master-photo{aspect-ratio:3/4;border-radius:14px;border:2px dashed rgba(199,123,46,.5);display:grid;place-items:center;color:var(--muted);font-size:14px;text-align:center;padding:20px;background:var(--bg)}
+  .master-photo{aspect-ratio:3/4;border-radius:14px;border:2px dashed rgba(199,123,46,.5);display:grid;place-items:center;color:var(--muted);font-size:14px;text-align:center;padding:20px;background:var(--bg);overflow:hidden}
   .master-photo small{display:block;max-width:230px;margin-top:10px;line-height:1.45}
+  .master-photo.has-photo{padding:0;border-style:solid;border-color:var(--line);background:var(--bg)}
+  .master-photo img{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
+  .master-photo-placeholder{max-width:260px}
 
   /* ======= КОНТАКТЫ ======= */
   .contacts-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px}

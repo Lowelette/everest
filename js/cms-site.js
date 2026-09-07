@@ -10,7 +10,11 @@
     hours_short: 'Ежедневно с 10:00',
     promo_title: 'Скидка 5% на всю сумму договора',
     promo_text: 'Для работников ВАЗа, пенсионеров и участников СВО. Подробности уточняйте у менеджера.',
-    footer_requisites: 'ИП [реквизиты уточнить]'
+    footer_requisites: 'ИП [реквизиты уточнить]',
+    installer_kicker: 'Кто ставит',
+    installer_title: 'Мастера, которым не страшно доверить дом.',
+    installer_text: 'Наши монтажники ставят двери каждый день, а не «по выходным». Приедут вовремя, сделают ровно и уберут за собой — так, что соседи спросят ваш номер телефона.',
+    installer_photo_key: ''
   };
 
   const digits = value => String(value || '').replace(/\D/g, '');
@@ -32,6 +36,9 @@
     document.querySelectorAll('[data-setting]').forEach(el => {
       const key = el.dataset.setting;
       if (s[key] != null && String(s[key]).trim() !== '') el.textContent = s[key];
+    });
+    ['installer_kicker','installer_title','installer_text'].forEach(key => {
+      document.querySelectorAll(`[data-setting="${key}"]`).forEach(el => { el.textContent = String(s[key] ?? ''); });
     });
     document.querySelectorAll('[data-setting-phone="primary"]').forEach(el => {
       el.href = `tel:${telHref(s.phone_primary)}`;
@@ -66,6 +73,25 @@
 
     const promoVisible = boolSetting(s, 'promo_enabled', true);
     document.querySelectorAll('[data-promo-block]').forEach(el => { el.hidden = !promoVisible; });
+
+    const installerKey = String(s.installer_photo_key || '').trim();
+    document.querySelectorAll('[data-installer-photo]').forEach(el => {
+      const old = el.querySelector('img');
+      if (installerKey){
+        const src = `${API_BASE}/media/${encodeURIComponent(installerKey)}`;
+        let img = old;
+        if (!img){ img = document.createElement('img'); img.alt = 'Монтажник Эверест'; el.appendChild(img); }
+        img.src = src;
+        const placeholder = el.querySelector('[data-installer-placeholder]');
+        if (placeholder) placeholder.hidden = true;
+        el.classList.add('has-photo');
+      } else {
+        if (old) old.remove();
+        const placeholder = el.querySelector('[data-installer-placeholder]');
+        if (placeholder) placeholder.hidden = false;
+        el.classList.remove('has-photo');
+      }
+    });
 
     const footerReq = String(s.footer_requisites || '').trim();
     document.querySelectorAll('[data-footer-requisites]').forEach(el => { el.hidden = !footerReq; });
