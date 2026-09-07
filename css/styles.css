@@ -324,3 +324,19 @@ img,svg,video,canvas{max-width:100%}
   .mobile-bar{padding-left:10px;padding-right:10px;gap:8px}
   .mobile-bar .btn{font-size:13px;padding:12px 9px}
 }
+
+
+/* ===== Everest v6.6 — official messenger marks ===== */
+.messenger-btn{display:inline-flex!important;align-items:center;justify-content:center;gap:8px}
+.messenger-icon{display:inline-block;width:20px;height:20px;flex:0 0 20px;object-fit:contain}
+.btn-max{background:#471AFF!important;border-color:#471AFF!important;color:#fff!important}
+.btn-max:hover{background:#3c12df!important;border-color:#3c12df!important;box-shadow:0 10px 28px rgba(71,26,255,.24)}
+.btn-whatsapp{border-color:#25D366!important;color:#128C7E!important;background:#fff!important}
+.messenger-contact-icon{width:22px;height:22px;object-fit:contain;align-self:flex-start;margin-top:1px}
+.messenger-contact .wa-text-link{color:#128C7E!important;font-weight:700}
+.messenger-contact .max-text-link{color:#471AFF!important;font-weight:700}
+.wa-float{background:#fff!important;border:1px solid rgba(37,211,102,.45)!important;color:inherit!important}
+.wa-float .wa-official-icon{display:block;width:38px;height:38px;object-fit:contain}
+.hero .badge[data-promo-block]{display:inline-flex;align-items:center}
+.hero .badge[data-promo-block][hidden]{display:none!important}
+.btn-max .messenger-icon{background:#fff;border-radius:6px;padding:2px;box-sizing:border-box}

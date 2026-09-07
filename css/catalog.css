@@ -444,3 +444,10 @@
   .catalog-browser .product-card h3{font-size:19px}
   .product-detail-media{height:330px!important}
 }
+
+
+/* ===== Everest v6.6 — square product photography ===== */
+.catalog-browser .product-card{border-radius:0 0 16px 16px}
+.catalog-browser .product-visual,.catalog-browser .product-gallery,.catalog-browser .product-gallery-stage{border-radius:0!important}
+.catalog-browser .product-gallery [data-gallery-slide],.catalog-browser .catalog-product-image{border-radius:0!important}
+.product-detail-media,.product-detail-media .product-gallery,.product-detail-media .product-gallery-stage,.product-detail-media [data-gallery-slide]{border-radius:0!important}
