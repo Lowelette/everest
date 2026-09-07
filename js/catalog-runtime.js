@@ -4,6 +4,7 @@
   const digits = value => String(value || '').replace(/\D/g,'');
   const formatNumber = value => new Intl.NumberFormat('ru-RU').format(Number(value));
   const formatPrice = product => Number(product.price_amount)>0 ? `${formatNumber(product.price_amount)} ₽` : (product.price_text || 'Цена по запросу');
+  const normalizeFeatures = value => (Array.isArray(value)?value:[value]).flatMap(x=>String(x??'').replace(/\\n/g,'\n').split(/\r?\n/)).map(x=>x.trim()).filter(Boolean);
   const waUrl = (productName) => {
     const settings = window.EverestSettings || {};
     const number = String(settings.whatsapp_number || '79297165716').replace(/\D/g,'');
@@ -38,7 +39,7 @@
   }
   function openProductDetails(product, category, index=0){
     const dialog=ensureDetailsDialog();
-    const features=Array.isArray(product.features)?product.features:[];
+    const features=normalizeFeatures(product.features);
     const groups=groupedOptions(product);
     const max=maxUrl();
     const showMax=!!max&&settingOn('max_enabled',true);
@@ -51,7 +52,7 @@
 
   function card(product, index, category){
     let features = [];
-    try { features = Array.isArray(product.features) ? product.features : JSON.parse(product.features_json || '[]'); } catch(_){}
+    try { features = normalizeFeatures(Array.isArray(product.features) ? product.features : JSON.parse(product.features_json || '[]')); } catch(_){}
     const visualClass = `catalog-door ${category === 'interior' ? 'interior ' : ''}${escapeHtml(product.visual_style || `v${(index % 6)+1}`)}`;
     const visual = product.image_url
       ? `<img class="catalog-product-image" src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}" loading="lazy">`
