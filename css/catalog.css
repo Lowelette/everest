@@ -567,7 +567,12 @@
 .catalog-showcase-glow,.showcase-door{display:none!important}
 
 /* Interior page uses the same architectural language, just a little softer. */
-.catalog-interior-page .catalog-hero::after{filter:saturate(.78) brightness(1.04)}
+.catalog-interior-page .catalog-hero::after{
+  background-image:url("../assets/hero-interior-doorway.webp");
+  background-position:center right;
+  filter:none;
+  opacity:.98;
+}
 .catalog-interior-page .catalog-hero::before{
   background:linear-gradient(90deg,
     rgba(17,70,68,.99) 0%,
