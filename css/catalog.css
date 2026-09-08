@@ -614,3 +614,23 @@
   }
   .catalog-showcase{min-height:220px}
 }
+
+/* ===== Everest v6.9 — catalog header uses the same green language as home ===== */
+.catalog-page .header-catalog{
+  background:rgba(33,71,68,.98)!important;
+  color:#fff!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.08)!important;
+  border-bottom:0!important;
+}
+.catalog-page .header-catalog .logo,
+.catalog-page .header-catalog .phone,
+.catalog-page .header-catalog .nav a{
+  color:#fff!important;
+}
+.catalog-page .header-catalog .nav a{opacity:.76}
+.catalog-page .header-catalog .nav a:hover{opacity:1}
+.catalog-page .header-catalog .nav a.active{
+  color:var(--accent-highlight)!important;
+  opacity:1;
+}
+.catalog-page .header-catalog .phone small{color:rgba(255,255,255,.72)!important}

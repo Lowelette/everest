@@ -364,3 +364,20 @@ img,svg,video,canvas{max-width:100%}
   border-color:#9588ff!important;
   color:#fff!important;
 }
+
+/* ===== Everest v6.9 — WhatsApp: brand-green disc with white mark ===== */
+.wa-float{
+  background:#25D366!important;
+  border:1px solid #25D366!important;
+  color:#fff!important;
+  box-shadow:0 10px 28px rgba(37,211,102,.34)!important;
+}
+.wa-float:hover{
+  background:#20bd5a!important;
+  border-color:#20bd5a!important;
+}
+.wa-float .wa-official-icon{
+  width:34px!important;
+  height:34px!important;
+  filter:brightness(0) invert(1);
+}
