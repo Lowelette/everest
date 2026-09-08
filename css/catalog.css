@@ -523,3 +523,94 @@
   .showcase-door.entrance .door-lines{left:31px;right:31px;top:39px;bottom:39px}
   .showcase-door.interior .door-lines{inset:42px 32px}
 }
+
+
+/* ===== Everest v6.8 — final hero: architectural light doorway ===== */
+.catalog-hero{
+  background:#154846;
+  isolation:isolate;
+}
+.catalog-hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background-image:url("../assets/hero-doorway.webp");
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:center right;
+  opacity:.98;
+}
+.catalog-hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  width:auto;
+  height:auto;
+  right:auto;
+  top:auto;
+  border-radius:0;
+  pointer-events:none;
+  background:linear-gradient(90deg,
+    rgba(17,70,68,.99) 0%,
+    rgba(17,70,68,.97) 34%,
+    rgba(17,70,68,.88) 46%,
+    rgba(17,70,68,.50) 58%,
+    rgba(17,70,68,.14) 73%,
+    rgba(17,70,68,.03) 100%);
+}
+.catalog-hero-grid{position:relative;z-index:2}
+.catalog-showcase{min-height:390px;pointer-events:none}
+.catalog-showcase::before,.catalog-showcase::after,
+.catalog-showcase-glow,.showcase-door{display:none!important}
+
+/* Interior page uses the same architectural language, just a little softer. */
+.catalog-interior-page .catalog-hero::after{filter:saturate(.78) brightness(1.04)}
+.catalog-interior-page .catalog-hero::before{
+  background:linear-gradient(90deg,
+    rgba(17,70,68,.99) 0%,
+    rgba(17,70,68,.97) 35%,
+    rgba(17,70,68,.88) 47%,
+    rgba(17,70,68,.54) 59%,
+    rgba(17,70,68,.18) 74%,
+    rgba(17,70,68,.04) 100%);
+}
+
+@media(min-width:861px){
+  .catalog-hero-grid{grid-template-columns:minmax(0,1.02fr) minmax(360px,.98fr);gap:44px}
+  .catalog-hero h1{max-width:760px}
+}
+
+@media(max-width:860px){
+  .catalog-hero{
+    padding-bottom:30px;
+    background:#154846;
+  }
+  .catalog-hero::after{
+    background-size:auto 48%;
+    background-position:right bottom;
+    opacity:.96;
+  }
+  .catalog-hero::before{
+    background:linear-gradient(180deg,
+      rgba(17,70,68,.99) 0%,
+      rgba(17,70,68,.99) 55%,
+      rgba(17,70,68,.90) 68%,
+      rgba(17,70,68,.40) 82%,
+      rgba(17,70,68,.10) 100%);
+  }
+  .catalog-hero-grid{grid-template-columns:1fr;gap:14px;text-align:center}
+  .catalog-hero-grid>div:first-child{position:relative;z-index:2}
+  .catalog-showcase{display:block;min-height:250px}
+  .catalog-hero .breadcrumbs{justify-content:center}
+}
+
+@media(max-width:520px){
+  .catalog-hero::after{
+    background-size:auto 42%;
+    background-position:69% bottom;
+  }
+  .catalog-showcase{min-height:220px}
+}
