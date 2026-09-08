@@ -16,9 +16,29 @@ async function sendLead(payload){
     body: JSON.stringify(normalized)
   });
 
-  if (!response.ok) {
-    throw new Error('Не удалось отправить заявку');
+  if (!response.ok) throw new Error('Не удалось отправить заявку');
+  return response.json().catch(() => ({ok:true}));
+}
+
+function setInlineError(container, message=''){
+  if (!container) return;
+  let error = container.querySelector('[data-form-error]');
+  if (!error){
+    error = document.createElement('p');
+    error.className = 'form-error';
+    error.dataset.formError = '';
+    error.setAttribute('role','alert');
+    const button = container.querySelector('button[type="submit"], .btn');
+    if (button) button.insertAdjacentElement('afterend', error);
+    else container.appendChild(error);
   }
+  error.textContent = message;
+  error.hidden = !message;
+}
+
+function leadSuccessText(data){
+  const id = Number(data?.id || data?.lead_number || 0);
+  return id ? `Заявка №${id} принята` : 'Заявка принята';
 }
 
 /* ---------- шапка + дверь ---------- */
@@ -27,12 +47,8 @@ const door = document.getElementById('door');
 
 function updateScrollState(){
   const y = window.scrollY;
-  if (header && !header.classList.contains('header-catalog')) {
-    header.classList.toggle('scrolled', y > 30);
-  }
-  if (door) {
-    door.classList.toggle('opening', y > 150);
-  }
+  if (header && !header.classList.contains('header-catalog')) header.classList.toggle('scrolled', y > 30);
+  if (door) door.classList.toggle('opening', y > 150);
 }
 
 if (header || door){
@@ -51,11 +67,8 @@ if ('IntersectionObserver' in window){
       }
     });
   }, {threshold: .12});
-
   revealItems.forEach(element => observer.observe(element));
-} else {
-  revealItems.forEach(element => element.classList.add('in'));
-}
+} else revealItems.forEach(element => element.classList.add('in'));
 
 /* ---------- КВИЗ ---------- */
 const qBody = document.getElementById('q-body');
@@ -71,6 +84,7 @@ if (qBody && qFill && qBack && qNext){
   ];
 
   let qIdx = 0;
+  let qSubmitting = false;
   const qAnswers = Array(qSteps.length).fill(null);
 
   function renderQ(){
@@ -92,10 +106,7 @@ if (qBody && qFill && qBack && qNext){
         </div>`;
 
       qBody.querySelectorAll('.q-opt').forEach(button => {
-        button.addEventListener('click', () => {
-          qAnswers[qIdx] = button.dataset.v;
-          renderQ();
-        });
+        button.addEventListener('click', () => { qAnswers[qIdx] = button.dataset.v; renderQ(); });
       });
 
       qNext.disabled = !qAnswers[qIdx];
@@ -106,54 +117,59 @@ if (qBody && qFill && qBack && qNext){
     qBody.innerHTML = `
       <div class="q-count">Последний шаг</div>
       <div class="q-title">Как с вами связаться?</div>
-      <div class="field"><input type="text" id="q-name" placeholder="Как вас зовут?"></div>
-      <div class="field"><input type="tel" id="q-phone" placeholder="Телефон"></div>
-      <p class="q-gift">Скидка 5% действует для работников ВАЗа, пенсионеров и участников СВО.</p>`;
+      <div class="field"><input type="text" id="q-name" autocomplete="name" placeholder="Как вас зовут?"></div>
+      <div class="field"><input type="tel" id="q-phone" autocomplete="tel" placeholder="Телефон"></div>
+      <p class="q-gift">Скидка 5% действует для работников ВАЗа, пенсионеров и участников СВО.</p>
+      <p class="form-error" data-form-error role="alert" hidden></p>`;
     qNext.disabled = false;
     qNext.textContent = 'Получить варианты →';
   }
 
   qBack.addEventListener('click', () => {
-    if (qIdx > 0){
-      qIdx -= 1;
-      renderQ();
-    }
+    if (!qSubmitting && qIdx > 0){ qIdx -= 1; renderQ(); }
   });
 
-  qNext.addEventListener('click', () => {
+  qNext.addEventListener('click', async () => {
+    if (qSubmitting) return;
     if (qIdx < qSteps.length){
       if (!qAnswers[qIdx]) return;
-      qIdx += 1;
-      renderQ();
-      return;
+      qIdx += 1; renderQ(); return;
     }
 
     const phoneInput = document.getElementById('q-phone');
     const nameInput = document.getElementById('q-name');
-    const phone = phoneInput.value.trim();
+    const phone = phoneInput?.value.trim() || '';
+    if (phone.length < 6){ phoneInput?.focus(); setInlineError(qBody,'Укажите телефон, чтобы мы могли связаться.'); return; }
 
-    if (phone.length < 6){
-      phoneInput.focus();
-      return;
+    qSubmitting = true;
+    qNext.disabled = true;
+    const previousText = qNext.textContent;
+    qNext.textContent = 'Отправляем…';
+    setInlineError(qBody,'');
+    try {
+      const data = await sendLead({
+        'Источник': 'Подбор двери на сайте',
+        'Имя': nameInput?.value.trim() || 'Не указано',
+        'Телефон': phone,
+        ...Object.fromEntries(qSteps.map((step, index) => [step.q.replace('?', ''), qAnswers[index]]))
+      });
+
+      qFill.style.width = '100%';
+      const quizNav = document.querySelector('.quiz-nav');
+      if (quizNav) quizNav.style.display = 'none';
+      qBody.innerHTML = `
+        <div class="q-done">
+          <div class="q-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <h3>${leadSuccessText(data)}</h3>
+          <p>Спасибо! Менеджер свяжется с вами в рабочее время.<br>Ваши ответы:</p>
+          ${qAnswers.map(answer => `<span class="q-chip">${answer}</span>`).join('')}
+        </div>`;
+    } catch (error) {
+      setInlineError(qBody,'Не получилось отправить заявку. Проверьте интернет и попробуйте ещё раз.');
+      qNext.disabled = false;
+      qNext.textContent = previousText;
+      qSubmitting = false;
     }
-
-    sendLead({
-      'Источник': 'Подбор двери на сайте',
-      'Имя': nameInput.value.trim() || 'Не указано',
-      'Телефон': phone,
-      ...Object.fromEntries(qSteps.map((step, index) => [step.q.replace('?', ''), qAnswers[index]]))
-    });
-
-    qFill.style.width = '100%';
-    const quizNav = document.querySelector('.quiz-nav');
-    if (quizNav) quizNav.style.display = 'none';
-    qBody.innerHTML = `
-      <div class="q-done">
-        <div class="q-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg></div>
-        <h3>Готово! Уже подбираем варианты</h3>
-        <p>Спасибо! Менеджер свяжется с вами в рабочее время.<br>Ваши ответы:</p>
-        ${qAnswers.map(answer => `<span class="q-chip">${answer}</span>`).join('')}
-      </div>`;
   });
 
   renderQ();
@@ -161,32 +177,52 @@ if (qBody && qFill && qBack && qNext){
 
 /* ---------- формы замера ---------- */
 document.querySelectorAll('[data-lead-form]').forEach(form => {
-  form.addEventListener('submit', event => {
+  form.addEventListener('submit', async event => {
     event.preventDefault();
+    if (form.dataset.submitting === '1') return;
 
     const phoneInput = form.querySelector('[name="phone"], #f-phone');
     const nameInput = form.querySelector('[name="name"], #f-name');
     const phone = phoneInput ? phoneInput.value.trim() : '';
+    const body = form.querySelector('[data-form-body], #form-body');
+    const thanks = form.querySelector('[data-form-thanks], #form-thanks');
+    const submit = form.querySelector('button[type="submit"]');
 
     if (!phoneInput || phone.length < 6){
-      if (phoneInput) phoneInput.focus();
+      phoneInput?.focus();
+      setInlineError(body || form,'Укажите телефон, чтобы мы могли связаться.');
       return;
     }
 
-    sendLead({
-      'Источник': form.dataset.source || 'Форма на сайте',
-      'Имя': nameInput && nameInput.value.trim() ? nameInput.value.trim() : 'Не указано',
-      'Телефон': phone
-    });
+    form.dataset.submitting = '1';
+    form.setAttribute('aria-busy','true');
+    setInlineError(body || form,'');
+    const previousText = submit?.textContent || '';
+    if (submit){ submit.disabled = true; submit.textContent = 'Отправляем…'; }
 
-    const body = form.querySelector('[data-form-body], #form-body');
-    const thanks = form.querySelector('[data-form-thanks], #form-thanks');
-    if (body) body.style.display = 'none';
-    if (thanks) thanks.style.display = 'block';
+    try {
+      const data = await sendLead({
+        'Источник': form.dataset.source || 'Форма на сайте',
+        'Имя': nameInput && nameInput.value.trim() ? nameInput.value.trim() : 'Не указано',
+        'Телефон': phone
+      });
+      if (body) body.style.display = 'none';
+      if (thanks){
+        const title = thanks.querySelector('h3');
+        if (title) title.textContent = `${leadSuccessText(data)} ✓`;
+        thanks.style.display = 'block';
+        thanks.setAttribute('tabindex','-1');
+        thanks.focus({preventScroll:true});
+      }
+    } catch (error) {
+      setInlineError(body || form,'Не получилось отправить заявку. Проверьте интернет и попробуйте ещё раз.');
+      if (submit){ submit.disabled = false; submit.textContent = previousText; }
+      delete form.dataset.submitting;
+    } finally {
+      form.removeAttribute('aria-busy');
+    }
   });
 });
 
 /* ---------- год ---------- */
-document.querySelectorAll('.js-year, #year').forEach(element => {
-  element.textContent = new Date().getFullYear();
-});
+document.querySelectorAll('.js-year, #year').forEach(element => { element.textContent = new Date().getFullYear(); });

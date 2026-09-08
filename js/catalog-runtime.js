@@ -7,6 +7,7 @@
   const formatNumber = value => new Intl.NumberFormat('ru-RU').format(Number(value));
   const formatPrice = product => Number(product.price_amount)>0 ? `${formatNumber(product.price_amount)} ₽` : (product.price_text || 'Цена по запросу');
   const normalizeFeatures = value => (Array.isArray(value)?value:[value]).flatMap(x=>String(x??'').replace(/\\n/g,'\n').split(/\r?\n/)).map(x=>x.trim()).filter(Boolean);
+  const normalizeSearch = value => String(value || '').toLocaleLowerCase('ru-RU').replace(/ё/g,'е').trim();
   const waUrl = (productName) => {
     const settings = window.EverestSettings || {};
     const number = String(settings.whatsapp_number || '79297165716').replace(/\D/g,'');
@@ -67,6 +68,7 @@
     document.body.appendChild(dialog);
     dialog.querySelector('.product-detail-close').addEventListener('click',()=>dialog.close());
     dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
+    dialog.addEventListener('close',()=>document.body.classList.remove('product-dialog-open'));
     return dialog;
   }
   function openProductDetails(product, category, index=0){
@@ -80,6 +82,7 @@
     dialog.querySelector('[data-product-detail-body]').innerHTML=`<div class="product-detail-grid"><div class="product-detail-media">${galleryMarkup(product,category,index,'detail')}${product.badge?`<span class="product-detail-badge">${escapeHtml(product.badge)}</span>`:''}</div><div class="product-detail-info">${product.tagline?`<span class="product-detail-tag">${escapeHtml(product.tagline)}</span>`:''}<h2>${escapeHtml(product.name)}</h2><strong class="product-detail-price">${escapeHtml(formatPrice(product))}</strong>${product.description?`<p class="product-detail-description">${escapeHtml(product.description)}</p>`:''}${features.length?`<section><h3>Характеристики</h3><ul class="product-detail-features">${features.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></section>`:''}${groups.length?`<section><h3>Параметры</h3><div class="product-detail-groups">${groups.map(([g,values])=>`<div><strong>${escapeHtml(g)}</strong><span>${values.map(escapeHtml).join(' · ')}</span></div>`).join('')}</div></section>`:''}<div class="product-detail-actions"><a class="btn btn-primary" href="#form" data-detail-measure>Бесплатный замер</a>${showMax?`<a class="btn btn-max messenger-btn" href="${escapeHtml(max)}" target="_blank" rel="noopener"><img class="messenger-icon" src="${MAX_ICON}" alt="" aria-hidden="true">Написать в MAX</a>`:''}${showWa?`<a class="btn btn-whatsapp messenger-btn" href="${escapeHtml(wa)}" target="_blank" rel="noopener"><img class="messenger-icon" src="${WHATSAPP_ICON}" alt="" aria-hidden="true">WhatsApp</a>`:''}</div></div></div>`;
     bindProductGalleries(dialog);
     dialog.querySelector('[data-detail-measure]')?.addEventListener('click',()=>dialog.close());
+    document.body.classList.add('product-dialog-open');
     dialog.showModal();
   }
 
@@ -87,7 +90,7 @@
     let features = [];
     try { features = normalizeFeatures(Array.isArray(product.features) ? product.features : JSON.parse(product.features_json || '[]')); } catch(_){}
     const shownFeatures=features.slice(0,2);
-    return `<article class="product-card reveal in" data-product-id="${product.id}">
+    return `<article class="product-card reveal in" data-product-id="${product.id}" tabindex="0" role="button" aria-label="Подробнее о модели ${escapeHtml(product.name)}">
       <div class="product-visual">
         ${product.badge ? `<span class="product-badge">${escapeHtml(product.badge)}</span>` : ''}
         ${galleryMarkup(product,category,index,'card')}
@@ -107,6 +110,16 @@
 
   const productHasOption = (p,id) => (p.filter_options||[]).some(o=>Number(o.id)===Number(id));
   const countFor = (products, predicate) => products.reduce((n,p)=>n+(predicate(p)?1:0),0);
+  function productSearchText(product){
+    return normalizeSearch([
+      product.name, product.tagline, product.badge, product.description, product.price_text,
+      product.factory?.name, product.door_class?.name,
+      ...normalizeFeatures(product.features),
+      ...(product.filter_options||[]).flatMap(o=>[o.group_name,o.name])
+    ].filter(Boolean).join(' '));
+  }
+  function isInStock(product){ return /\bв\s*налич/i.test(String(product.badge||'')); }
+  function isNew(product){ return /нов/i.test(String(product.badge||'')); }
 
   function checkRow({kind,id,name,count,factoryId='',groupId=''}){
     return `<label class="catalog-check" ${factoryId!==''?`data-factory-id="${factoryId}"`:''}>
@@ -146,7 +159,19 @@
     const shell=temp.firstElementChild;
     const results=document.createElement('div');
     results.className='catalog-results';
-    results.innerHTML=`<div class="catalog-results-head"><span>Каталог</span><strong data-result-count-head>${products.length} моделей</strong></div>`;
+    results.innerHTML=`
+      <div class="catalog-results-head"><span>Каталог</span><strong data-result-count-head>${products.length} моделей</strong></div>
+      <div class="catalog-tools" aria-label="Поиск и сортировка каталога">
+        <label class="catalog-search"><span>Поиск</span><input type="search" autocomplete="off" placeholder="Найти модель, характеристику…" data-catalog-search><button type="button" data-search-clear aria-label="Очистить поиск" hidden>×</button></label>
+        <label class="catalog-sort"><span>Сортировка</span><select data-catalog-sort>
+          <option value="default">По порядку</option>
+          <option value="stock">Сначала в наличии</option>
+          <option value="new">Сначала новые</option>
+          <option value="price-asc">Цена: сначала дешевле</option>
+          <option value="price-desc">Цена: сначала дороже</option>
+          <option value="name">По названию</option>
+        </select></label>
+      </div>`;
     grid.parentNode.insertBefore(browser,grid);
     browser.appendChild(shell);
     browser.appendChild(results);
@@ -156,29 +181,41 @@
 
   function bindFilters(shell, products, meta, grid, category){
     if(!shell) return;
+    const browser=shell.closest('.catalog-browser');
     const optionChecks=[...shell.querySelectorAll('[data-filter-option]')];
     const minInput=shell.querySelector('[data-price-min]');
     const maxInput=shell.querySelector('[data-price-max]');
-    const resultLabels=[...shell.closest('.catalog-browser').querySelectorAll('[data-result-count], [data-result-count-head]')];
+    const searchInput=browser.querySelector('[data-catalog-search]');
+    const searchClear=browser.querySelector('[data-search-clear]');
+    const sortSelect=browser.querySelector('[data-catalog-sort]');
+    const resultLabels=[...browser.querySelectorAll('[data-result-count], [data-result-count-head]')];
     const mobileToggle=shell.querySelector('[data-filter-toggle]');
-    const body=shell.querySelector('[data-filter-body]');
-    // На коротком каталоге боковушка обычная; на длинном остаётся рядом при прокрутке.
+    const originalOrder=new Map(products.map((p,i)=>[Number(p.id),i]));
+    const searchCache=new Map(products.map(p=>[Number(p.id),productSearchText(p)]));
+
     shell.classList.toggle('is-sticky', products.length > 12);
     if(!grid.dataset.productDetailsBound){
       grid.dataset.productDetailsBound='1';
-      grid.addEventListener('click',e=>{
+      const openFromTarget=e=>{
         const btn=e.target.closest('[data-product-details]');
         const cardEl=e.target.closest('.product-card');
-        if(!btn&&!cardEl)return;
-        // Gallery controls and other explicit interactive elements keep their own behaviour.
-        if(!btn&&e.target.closest('[data-gallery-step],[data-gallery-dot],a,button,input,label,select,textarea'))return;
+        if(!btn&&!cardEl)return false;
+        if(!btn&&e.target.closest('[data-gallery-step],[data-gallery-dot],a,button,input,label,select,textarea'))return false;
         const id=btn?btn.dataset.productDetails:cardEl?.dataset.productId;
-        const product=products.find(p=>Number(p.id)===Number(id));if(!product)return;
-        e.preventDefault();openProductDetails(product,category,products.indexOf(product));
+        const product=products.find(p=>Number(p.id)===Number(id));if(!product)return false;
+        e.preventDefault();openProductDetails(product,category,products.indexOf(product));return true;
+      };
+      grid.addEventListener('click',openFromTarget);
+      grid.addEventListener('keydown',e=>{
+        if(!['Enter',' '].includes(e.key))return;
+        const cardEl=e.target.closest('.product-card');
+        if(!cardEl || e.target!==cardEl)return;
+        e.preventDefault();
+        const product=products.find(p=>Number(p.id)===Number(cardEl.dataset.productId));
+        if(product)openProductDetails(product,category,products.indexOf(product));
       });
     }
 
-    const selectedSet = checks => new Set(checks.filter(c=>c.checked).map(c=>Number(c.value)));
     function selectedOptionsByGroup(){
       const map=new Map();
       optionChecks.filter(c=>c.checked).forEach(c=>{
@@ -194,11 +231,40 @@
         else el.textContent=`${n} ${n%10===1&&n%100!==11?'модель':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'модели':'моделей')}`;
       });
     }
+    function resetAll(){
+      optionChecks.forEach(c=>c.checked=false);
+      if(minInput)minInput.value='';
+      if(maxInput)maxInput.value='';
+      if(searchInput)searchInput.value='';
+      if(sortSelect)sortSelect.value='default';
+      if(searchClear)searchClear.hidden=true;
+      apply();
+    }
+    function sortProducts(items){
+      const mode=sortSelect?.value||'default';
+      const arr=[...items];
+      const original=(a,b)=>(originalOrder.get(Number(a.id))??0)-(originalOrder.get(Number(b.id))??0);
+      if(mode==='default') return arr.sort(original);
+      if(mode==='stock') return arr.sort((a,b)=>(Number(!isInStock(a))-Number(!isInStock(b)))||original(a,b));
+      if(mode==='new') return arr.sort((a,b)=>(Number(!isNew(a))-Number(!isNew(b)))||(new Date(b.created_at||0)-new Date(a.created_at||0))||original(a,b));
+      if(mode==='price-asc') return arr.sort((a,b)=>{
+        const ap=Number(a.price_amount)||Number.POSITIVE_INFINITY,bp=Number(b.price_amount)||Number.POSITIVE_INFINITY;
+        return (ap-bp)||original(a,b);
+      });
+      if(mode==='price-desc') return arr.sort((a,b)=>{
+        const ap=Number(a.price_amount)||-1,bp=Number(b.price_amount)||-1;
+        return (bp-ap)||original(a,b);
+      });
+      if(mode==='name') return arr.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru',{sensitivity:'base'})||original(a,b));
+      return arr.sort(original);
+    }
     function apply(){
       const groups=selectedOptionsByGroup();
       const min=Number(digits(minInput?.value))||null;
       const max=Number(digits(maxInput?.value))||null;
-      const filtered=products.filter(p=>{
+      const query=normalizeSearch(searchInput?.value);
+      let filtered=products.filter(p=>{
+        if(query && !(searchCache.get(Number(p.id))||'').includes(query)) return false;
         if(min||max){
           const price=Number(p.price_amount)||0;
           if(!price) return false;
@@ -213,10 +279,17 @@
         }
         return true;
       });
-      grid.innerHTML=filtered.length?filtered.map((p,i)=>card(p,i,category)).join(''):`<div class="catalog-loading">По выбранным фильтрам моделей пока нет. Попробуйте изменить параметры.</div>`;
+      filtered=sortProducts(filtered);
+      if(filtered.length){
+        grid.innerHTML=filtered.map((p,i)=>card(p,i,category)).join('');
+      }else{
+        grid.innerHTML=`<div class="catalog-empty" role="status"><div class="catalog-empty-icon" aria-hidden="true">⌕</div><h3>Ничего не нашли</h3><p>Попробуйте изменить поиск, цену или параметры фильтра.</p><button class="btn btn-ghost" type="button" data-empty-reset>Сбросить всё</button></div>`;
+      }
       bindProductGalleries(grid);
       setResultCount(filtered.length);
-      shell.classList.toggle('has-active-filters',optionChecks.some(c=>c.checked)||!!digits(minInput?.value)||!!digits(maxInput?.value));
+      const activeFilters=optionChecks.some(c=>c.checked)||!!digits(minInput?.value)||!!digits(maxInput?.value)||!!query;
+      shell.classList.toggle('has-active-filters',activeFilters);
+      if(searchClear)searchClear.hidden=!query;
     }
     function formatPriceInput(input){
       if(!input)return;
@@ -228,12 +301,12 @@
       i?.addEventListener('input',()=>{const raw=digits(i.value);i.value=raw?formatNumber(raw):'';try{i.setSelectionRange(i.value.length,i.value.length)}catch(_){};apply();});
       i?.addEventListener('blur',()=>formatPriceInput(i));
     });
-    shell.querySelector('[data-filter-reset]')?.addEventListener('click',()=>{
-      optionChecks.forEach(c=>c.checked=false);
-      if(minInput)minInput.value='';
-      if(maxInput)maxInput.value='';
-      apply();
-    });
+    searchInput?.addEventListener('input',apply);
+    searchInput?.addEventListener('search',apply);
+    searchClear?.addEventListener('click',()=>{searchInput.value='';searchInput.focus();apply()});
+    sortSelect?.addEventListener('change',apply);
+    shell.querySelector('[data-filter-reset]')?.addEventListener('click',resetAll);
+    grid.addEventListener('click',e=>{if(e.target.closest('[data-empty-reset]'))resetAll()});
     mobileToggle?.addEventListener('click',()=>{
       const open=shell.classList.toggle('mobile-open');
       mobileToggle.setAttribute('aria-expanded',String(open));
@@ -255,9 +328,10 @@
       if(products.length){
         const {shell}=createBrowser(grid,meta,products);
         bindFilters(shell,products,meta,grid,category);
-      }else grid.innerHTML=`<div class="catalog-loading">Пока здесь нет опубликованных моделей.</div>`;
+      }else grid.innerHTML=`<div class="catalog-empty" role="status"><div class="catalog-empty-icon" aria-hidden="true">🚪</div><h3>Каталог пока пуст</h3><p>Скоро здесь появятся новые модели. Пока оставьте заявку — подскажем актуальные варианты.</p><a class="btn btn-primary" href="#form">Оставить заявку</a></div>`;
     } catch (e) {
-      grid.innerHTML = `<div class="catalog-loading">Не удалось загрузить каталог. Оставьте заявку — подскажем актуальные варианты.</div>`;
+      grid.innerHTML = `<div class="catalog-empty" role="alert"><div class="catalog-empty-icon" aria-hidden="true">↻</div><h3>Каталог не загрузился</h3><p>Проверьте соединение или попробуйте ещё раз.</p><button class="btn btn-ghost" type="button" data-catalog-retry>Повторить</button></div>`;
+      grid.querySelector('[data-catalog-retry]')?.addEventListener('click',()=>{grid.innerHTML='<div class="catalog-loading">Загружаем каталог…</div>';loadGrid(grid)});
     }
   }
   document.addEventListener('DOMContentLoaded', () => document.querySelectorAll('[data-product-grid]').forEach(loadGrid));

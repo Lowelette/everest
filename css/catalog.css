@@ -665,3 +665,35 @@ html body.catalog-page header#header.header.header-catalog .btn-primary{
   border:1px solid rgba(255,255,255,.12)!important;
   box-shadow:0 9px 24px rgba(7,38,36,.24)!important;
 }
+
+/* ===== Everest v7.0 — search, sorting, empty states, mobile catalogue QA ===== */
+.catalog-results-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.catalog-tools{display:grid;grid-template-columns:minmax(220px,1fr) minmax(210px,280px);gap:12px;margin-bottom:16px;padding:12px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.68)}
+.catalog-search,.catalog-sort{display:grid;gap:6px;position:relative;min-width:0}
+.catalog-search>span,.catalog-sort>span{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.catalog-search input,.catalog-sort select{width:100%;min-width:0;height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);font:500 13px/1.2 'Golos Text',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+.catalog-search input{padding:0 42px 0 14px}
+.catalog-sort select{padding:0 36px 0 14px;cursor:pointer}
+.catalog-search input:focus,.catalog-sort select:focus{border-color:color-mix(in srgb,var(--accent) 58%,var(--line));box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent)}
+.catalog-search [data-search-clear]{position:absolute;right:7px;bottom:6px;width:32px;height:32px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:22px;line-height:1;cursor:pointer}
+.catalog-search [data-search-clear]:hover{background:var(--bg-2);color:var(--text)}
+.catalog-search [data-search-clear][hidden]{display:none}
+.catalog-empty{grid-column:1/-1;min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;border:1px dashed color-mix(in srgb,var(--accent) 28%,var(--line));border-radius:18px;background:color-mix(in srgb,var(--card) 88%,var(--bg-2));color:var(--text)}
+.catalog-empty-icon{width:52px;height:52px;display:grid;place-items:center;border-radius:50%;margin-bottom:14px;background:var(--bg-2);color:var(--accent);font-size:26px}
+.catalog-empty h3{font:700 20px/1.2 'Unbounded',sans-serif;margin:0 0 9px}
+.catalog-empty p{max-width:520px;margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.5}
+.catalog-browser .product-card:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 28%,transparent);outline-offset:3px}
+body.product-dialog-open{overflow:hidden}
+
+@media(max-width:860px){
+  .catalog-results-head{margin-top:6px}
+  .catalog-tools{grid-template-columns:1fr;gap:10px;padding:10px;margin-bottom:14px}
+  .catalog-search input,.catalog-sort select{height:46px;font-size:14px}
+  .catalog-empty{min-height:220px;padding:34px 20px}
+}
+@media(max-width:520px){
+  .catalog-results-head{align-items:baseline;margin-bottom:10px}
+  .catalog-results-head>span{font-size:16px;font-weight:800}
+  .catalog-results-head>strong{font-size:12px}
+  .catalog-tools{margin-left:0;margin-right:0;border-radius:14px}
+}

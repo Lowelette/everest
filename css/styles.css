@@ -381,3 +381,17 @@ img,svg,video,canvas{max-width:100%}
   height:34px!important;
   filter:brightness(0) invert(1);
 }
+
+/* ===== Everest v7.0 — reliable lead forms + final mobile QA ===== */
+.form-error{margin:10px 0 0!important;color:#a53a35!important;font-size:13px!important;line-height:1.4;text-align:left}
+.form-error[hidden]{display:none!important}
+.form[aria-busy="true"]{cursor:progress}
+.thanks:focus{outline:none}
+.thanks h3{color:var(--text)}
+
+@media(max-width:860px){
+  html,body{overscroll-behavior-x:none}
+  .mobile-bar{z-index:80}
+  .wa-float{z-index:79}
+  dialog.product-detail-dialog{max-width:100vw}
+}
