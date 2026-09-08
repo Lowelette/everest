@@ -615,22 +615,48 @@
   .catalog-showcase{min-height:220px}
 }
 
-/* ===== Everest v6.9 — catalog header uses the same green language as home ===== */
-.catalog-page .header-catalog{
-  background:rgba(33,71,68,.98)!important;
+
+/* ===== Everest v6.9.1 — catalog header hard fix =====
+   Keep entrance/interior headers on the same dark green brand surface as home.
+   Explicit background-color/background-image prevents later theme rules from
+   accidentally restoring the pale header while leaving white text behind. */
+html body.catalog-page header#header.header.header-catalog{
+  background:#214744!important;
+  background-color:#214744!important;
+  background-image:none!important;
   color:#fff!important;
-  box-shadow:0 1px 0 rgba(255,255,255,.08)!important;
-  border-bottom:0!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.09)!important;
+  border:0!important;
 }
-.catalog-page .header-catalog .logo,
-.catalog-page .header-catalog .phone,
-.catalog-page .header-catalog .nav a{
+html body.catalog-page header#header.header.header-catalog .logo,
+html body.catalog-page header#header.header.header-catalog .phone,
+html body.catalog-page header#header.header.header-catalog .nav a{
   color:#fff!important;
 }
-.catalog-page .header-catalog .nav a{opacity:.76}
-.catalog-page .header-catalog .nav a:hover{opacity:1}
-.catalog-page .header-catalog .nav a.active{
-  color:var(--accent-highlight)!important;
-  opacity:1;
+html body.catalog-page header#header.header.header-catalog .nav a{
+  opacity:.78!important;
 }
-.catalog-page .header-catalog .phone small{color:rgba(255,255,255,.72)!important}
+html body.catalog-page header#header.header.header-catalog .nav a:hover{
+  opacity:1!important;
+}
+html body.catalog-page header#header.header.header-catalog .nav a.active{
+  color:#7fc6bc!important;
+  opacity:1!important;
+}
+html body.catalog-page header#header.header.header-catalog .phone small{
+  color:rgba(255,255,255,.72)!important;
+  opacity:1!important;
+}
+html body.catalog-page header#header.header.header-catalog .logo-mark{
+  background:rgba(255,255,255,.12)!important;
+  color:#fff!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+}
+html body.catalog-page header#header.header.header-catalog .btn-primary{
+  background:linear-gradient(120deg,#4f9b92,#3f827b)!important;
+  color:#fff!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  box-shadow:0 9px 24px rgba(7,38,36,.24)!important;
+}
